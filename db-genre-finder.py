@@ -16,7 +16,13 @@ d = discogs_client.Client(f'WXYC Station Report Testing/0.1 +{YOUR_EMAIL}',user_
 
 # csv --> pandas db
 filename = Path("wxyc_db/wxyc_db.csv")
-specific_rows = range(56200, 56220)
+
+# prompt user to input desired range of rows to process
+start_idx = int(input("Enter the starting row index: "))
+end_idx = int(input("Enter the ending row index: "))
+specific_rows = range(start_idx, end_idx)
+print(f"Processing data from row {start_idx} to {end_idx}...")
+
 df = pd.read_csv(filename, skiprows = lambda x: (x not in specific_rows and x != 0))
 df = df.rename(columns={"Genre":"StationGenre"})
 df.to_csv("wxyc_with_discogs2.csv")
