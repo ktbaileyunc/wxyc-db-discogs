@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 YOUR_EMAIL = "email@email.com"
-DISCOGS_API_TOKEN = "here"
+DISCOGS_API_TOKEN = "user_token"
 NO_DATA = None
 last_index: int = 0
 
@@ -21,12 +21,9 @@ filename = Path("wxyc_db/wxyc_db.csv")
 start_idx = int(input("Enter the starting row index: "))
 end_idx = int(input("Enter the ending row index: "))
 specific_rows = range(start_idx, end_idx)
-print(f"Processing data from row {start_idx} to {end_idx}...")
 
 df = pd.read_csv(filename, skiprows = lambda x: (x not in specific_rows and x != 0))
 df = df.rename(columns={"Genre":"StationGenre"})
-df.to_csv("wxyc_with_discogs2.csv")
-
 
 # make columns with default value (no data)
 df['DiscogsID'] = NO_DATA
@@ -107,5 +104,6 @@ for index,rows in df.iterrows():
 end_time = time.time()
 print(f"ok, that took {round(end_time - start_time, 1)}s for {last_index} releases, which is {round((end_time - start_time)/last_index, 3)}s on average... long live radio")
 
-# save to csv, will go to output folder
-df.to_csv("output/wxyc_with_discogs5.csv", index=False)
+# rename + save to csv, will go to output folder
+output_filename = f"output/wxyc_with_discogs_{start_idx}_to_{end_idx}.csv"
+df.to_csv(output_filename, index=False)
