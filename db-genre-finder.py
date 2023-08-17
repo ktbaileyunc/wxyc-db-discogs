@@ -5,8 +5,8 @@ import re
 from pathlib import Path
 
 
-YOUR_EMAIL = "email@email.com"
-DISCOGS_API_TOKEN = "user_token"
+YOUR_EMAIL = ""
+DISCOGS_API_TOKEN = ""
 NO_DATA = None
 last_index: int = 0
 
@@ -48,54 +48,62 @@ for index,rows in df.iterrows():
     entry_title = df.at[index, "Title"]
     entry_artist = df.at[index,"Artist"]
     entry_format = df.at[index,"Format"]
+    found_type = "master"
+
+    print(f"starting search for {entry_title}")
 
     if "[" in entry_title:
-        df.at[index, "Title"] = re.sub("\[.*?\]","",entry_title)
+        entry_title = re.sub("\[.*?\]","",entry_title)
 
-    if entry_format == "vinyl - LP x 2":
-        df.at[index,"Format"] = "vinyl"
+    if df.at[index, "StationGenre"] == "Soundtracks":
+        entry_artist = ""
+        entry_title += "Soundtrack"
 
-    # SOUNDTRACKS
-
-    # v/a Comps
-
-    # 'EP'
-
-    try:
-        # first search release section
-        results = d.search(title=entry_title,artist=entry_artist,type="release")
-        first_result = results.page(1)[0]
-        df.at[index, "DiscogsID"] = first_result.id
-        df.at[index, "DiscogsURL"] = f"https://www.discogs.com/release/{first_result.id}"
-    except (IndexError, TypeError):
-        try:
-            # now try master section
-            time.sleep(1)
-            results = d.search(title=entry_title,artist=entry_artist,type="master")
-            first_result = results.page(1)[0]
-            df.at[index, "DiscogsID"] = first_result.id
-            df.at[index, "DiscogsURL"] = f"https://www.discogs.com/master/{first_result.id}"
-        except (IndexError, TypeError):
-            # this is where we give up, folks
-            continue
+    if "Various Artists" in entry_artist:
+        entry_artist = "Various"
     
+    results = d.search(entry_title,artist=entry_artist,type="master")
+    print(f"{entry_title} has {len(results)} for master")
+    if len(results) == 0:
+        results = d.search(entry_title,artist=entry_artist,type="release")
+        print(f"{entry_title} has {len(results)} for release")
+        found_type = "release"
+        if len(results) == 0 and entry_artist != "Various" and entry_artist != "":
+            results = d.search(artist=entry_artist,type="master")
+            df.at[index, "Checked"] = "yes but artist"
+            found_type = "master"
+
+    if len(results) == 0:
+        continue
+        # look at releases
+    first_result = results.page(1)[0]
+    df.at[index, "DiscogsID"] = first_result.id
+    df.at[index, "DiscogsURL"] = f"https://www.discogs.com/{found_type}/{first_result.id}"
+    # print(f"we found one for {index}\n")
+
+    print(first_result)
     try:
         # ok cool so each result is a discogs object
         # we can get genres from it
+        print(first_result.genres)
         genre = first_result.genres
         for i in range(len(genre)):
             # adds genre to appropriate column
-            df.at[index, f"DiscogsGenre{i+1}"] = genre[i]
+            if i < 5:
+                df.at[index, f"DiscogsGenre{i+1}"] = genre[i]
+
     except (IndexError, TypeError):
         continue
     
     try: 
         # same thing for styles (i.e. sub-genres)
+        print(f"{first_result.styles}\n\n")
         style = first_result.styles
-        for i in range(len(style)):
-            df.at[index, f"DiscogsStyle{i+1}"] = style[i]
+        for j in range(len(style)):
+            if j < 5:
+                df.at[index, f"DiscogsStyle{j+1}"] = style[j]
     except (IndexError, TypeError):
-        continue
+        pass
     
     # time limit (for now)
     #if time.time() - start_time > 60:
