@@ -73,10 +73,12 @@ for index,rows in df.iterrows():
             df.at[index, "Checked"] = "yes but artist"
             found_type = "master"
 
-    if len(results) == 0:
+    try:
+        first_result = results.page(1)[0]
+    except IndexError:
         continue
+    
         # look at releases
-    first_result = results.page(1)[0]
     df.at[index, "DiscogsID"] = first_result.id
     df.at[index, "DiscogsURL"] = f"https://www.discogs.com/{found_type}/{first_result.id}"
     # print(f"we found one for {index}\n")
