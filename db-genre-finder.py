@@ -20,7 +20,7 @@ filename = Path("wxyc_db/wxyc_db.csv")
 # prompt user to input desired range of rows to process
 start_idx = int(input("Enter the starting row index: "))
 end_idx = int(input("Enter the ending row index: "))
-specific_rows = range(start_idx, end_idx)
+specific_rows = range(start_idx, end_idx+1)
 
 df = pd.read_csv(filename, skiprows = lambda x: (x not in specific_rows and x != 0))
 df = df.rename(columns={"Genre":"StationGenre"})
@@ -39,7 +39,7 @@ start_time = time.time()
 
 # row by row to get data from discogs api
 for index,rows in df.iterrows():
-    time.sleep(1)
+    time.sleep(0.6)
 
     # some exception handling - will probably eventually move this to a different file to run a second time, on whatever didn't match
     df.at[index, "Checked"] = "yes"
@@ -65,10 +65,12 @@ for index,rows in df.iterrows():
     results = d.search(entry_title,artist=entry_artist,type="master")
     print(f"{entry_title} has {len(results)} for master")
     if len(results) == 0:
+        time.sleep(0.9)
         results = d.search(entry_title,artist=entry_artist,type="release")
         print(f"{entry_title} has {len(results)} for release")
         found_type = "release"
         if len(results) == 0 and entry_artist != "Various" and entry_artist != "":
+            time.sleep(0.9)
             results = d.search(artist=entry_artist,type="master")
             df.at[index, "Checked"] = "yes but artist"
             found_type = "master"
