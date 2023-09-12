@@ -35,7 +35,7 @@ df['Checked'] = NO_DATA
 for i in range(1,6):
     df[f'DiscogsGenre{i}'] = NO_DATA
 for j in range(1,6):
-    df[f'DiscogsGenre{j}'] = NO_DATA
+    df[f'DiscogsStyle{j}'] = NO_DATA
 
 
 print(f"{len(df)} items in specified portion of wxyc library. starting discogs now...")
